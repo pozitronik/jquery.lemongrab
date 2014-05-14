@@ -1,0 +1,615 @@
+﻿<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Lemongrab</title>
+<link rel="stylesheet" type="text/css" href="style.css">
+<script type="text/javascript" src="jquery-1.10.2.min.js"></script>
+<script type="text/javascript" src="jquery.lemongrab.js"></script>
+</head>
+<body>
+<h1>jquery.lemongrab.js</h1>
+
+jquery.lemongrab.js - простой и минималистичный jQuery-плагин для валидации форм. С его помощью можно задавать условия валидации полей, описывать реакцию на изменение состояния, и связывать поля по условиям.<br />Плагин подключается стандартным способом.
+
+<h1>Использование</h1>
+
+Для того, чтобы провалидировать набор полей в форме (или любом другом контейнере, содержащем поля), вызовите плагин функцией lemongrab():
+
+<pre>
+	$('#formid').lemongrab();//Провалидировать все поля в контейнере с id=formid
+</pre>
+
+Плагин валидирует поля по правилам, которые могут быть заданы тремя способами:
+
+<h2>Использование data-атрибутов</h2>
+
+Для каждого поля, которому требуется валидация, можно добавить один из data-атрибутов, задающих правила валидации:
+<ul>
+	<li><b>data-rule-valid</b>: задаёт правила, при которых поле считается валидным.</li>
+	<li><b>data-rule-required</b>: задаёт правила, при которых поле становится обязательным для заполнения.</li>
+	<li><b>data-rule-enabled</b>: задаёт правила, при которых поле становится доступным или недоступным для изменения.</li>
+	<li><b>data-rule-visible</b>: задаёт правила, при которых поле становится видимым или невидимым.</li>
+</ul>
+
+Это - наиболее простой и удобный способ задания правил. Сами правила записываются в JSON-формате вида:
+<pre>
+	RULE=[{
+	"<b>key</b>":"ключ валидации",
+	"<b>value</b>":"параметр валидации",
+	"<b>selector</b>":"селектор связанного поля",
+	"<b>invert</b>":"логика инвертирования правила",
+	"<b>logic</b>":"логика применения правила",
+	"<b>strict</b>":"строгость соблюдения правила",
+	"<b>min</b>":"минимальное значение",
+	"<b>max</b>":"максимальное значение"
+	},...,
+	{...}]
+</pre>
+
+где:
+<ul>
+	<li><b>способ валидации</b> (значение параметра <b>key</b>) - один из ключей, по которым может проводиться валидация:
+		<ul>
+			<li><b>regexp</b>: валидация по регулярному выражению. Можно использовать алиас <b>r</b>.</li>
+			<li><b>checked</b>: валидация по состоянию checkable-поля (&lt;input type="checkbox" /&gt; или &lt;input type="radio" /&gt;). Можно использовать алиасы <b>c</b>, <b>checkbox</b>, <b>radio</b>.</li>
+			<li><b>select</b>: валидация по состоянию элемента &lt;select &gt;. Можно использовать алиас <b>s</b>.</li>
+			<li><b>set</b>: валидация по состоянию набора полей (например, группы чекбоксов) в блоке.
+			<li><b>native</b>: валидация по нативному JavaScript-выражению или функции. Можно использовать алиасы <b>javascript</b>, <b>function</b>, <b>j</b>, <b>f</b>, <b>n</b>.</li>
+		</ul>
+		Параметр может быть опущен, значение по умолчанию - <b>native</b>.
+	</li>
+	<li><b>параметр валидации</b> (значение параметра <b>value</b>) - правило, по которому проходит валидация. Правила разнятся для указанных выше ключей:
+		<ul>
+			<li>Для <b>regexp</b> правило содержит регулярное выражение, на соответствие которому будет тестироваться значение связанного элемента. <b>Важно: </b> в регулярном выражении необходимо экранировать все символы "\", т.е. \ => \\.</li>
+			<li>Для <b>checked</b> правило не используется (проверяется напрямую состояние связанного элемента).</li>
+			<li>Для <b>select</b> правило содержит список опций (&lt;option&gt;), которые должны быть выбраны. Список может быть задан в виде JavaScript-массива с перечислением значений (value) опций (["option1","option2","option3"]), либо в виде строки со значениями, разделёнными запятой ("option1,option2,option3"). Строгость выбора опций задаётся в ключе <b>strict</b>. <br />См. также описание параметров <b>min</b> и <b>max</b>.</li>
+			<li>Для <b>set</b> правило содержит список селекторов полей, которые находятся внутри блока и которые должны быть отмечены (checked для &lt;input type="checkbox" /&gt; и &lt;input type="radio" /&gt;). Список задаётся в виде JavaScript-массива с перечислением селекторов элементов (["#element1",".element_class","input[type=checkbox]"]). Строгость выбора опций задаётся в ключе <b>strict</b>. <br />См. также описание параметров <b>min</b> и <b>max</b>.</li>
+			<li>Для <b>native</b> правило содержит нативный JavaScript-код, результат выполнения которого будет проверяться валидатором.</li>
+		</ul>
+		Параметр является обязательным для ключей <b>regexp</b> и <b>native</b>, для <b>select</b> и <b>set</b> он может быть опущен в случае, если заданы параметры <b>min</b> или <b>max</b>.
+	</li>
+	<li><b>селектор связанного поля</b> (значение параметра <b>selector</b>) - содержит jQuery-селектор поля (полей), с которым связывается валидация.<br>Параметр может быть опущен, в этом случае привязка валидации производится к тому полю, в котором задаётся правило.</li>
+	<li><b>логика инвертирования правила</b> (значение параметра <b>invert</b>) - логическое условие (true или false), задающее инвертирование результата правила. Также инвертирование может быть задано в короткой форме, через добавление <b>!</b> перед значением ключа, например <b>!checked</b>. Правило, заданное в краткой форме, имеет приоритет над правилом, заданным в параметре.<br />
+	Параметр может быть опущен, в этом случае инвертирования не производится.
+	</li>
+	<li><b>логика применения правила</b> (значение параметра <b>logic</b>) - задаёт условия объединения правил для того случая, если их задано несколько. Можно задать условие <b>AND</b> (алиас <b>&amp;&amp;</b>), или <b>OR</b> (алиас <b>||</b>). Логика объединения в том и ином случае очевидна - И/ИЛИ.<br />
+	Параметр может быть опущен, в этом случае используется логика <b>AND</b>.</li>
+	<li><b>строгость соблюдения правила</b> (значение ключа <b>strict</b>) - логическое условие (true или false), задающее строгость соблюдения правила для ключей <b>select</b> и <b>set</b>:
+		<ul>
+			<li><b>select</b>: Если значение равно <b>false</b>, множество перечисленных в значении ключа <b>value</b> опций должно <u>входить</u> в множество выбранных элементов, если <b>true</b> - должно <u>совпадать с ним</u>.<br />Параметр может быть опущен, в этом случае он считается равным <b>false</b>.</li>
+			<li><b>set</b>: Если значение равно <b>false</b>, то для каждого из перечисленных селекторов должен быть <u>хотя бы один</u> отмеченный (checked) элемент, если true - то <u>все элементы</u>, попадающие в перечисленные селекторы, должны быть отмечены.</li>
+		</ul>
+	</li>
+	
+	<li><b>минимальное значение</b> (значение параметра <b>min</b>) - параметр применяется только для ключей <b>select</b> и <b>set</b>. В том и другом случае он задаёт минимальное количество элементов, которое должно быть выбрано в списке или блоке.<br />
+	Параметр может быть опущен, в этом случае его значение не учитывается.</li>
+	<li><b>максимальное значение</b> (значение параметра <b>max</b>) - параметр применяется только для ключей <b>select</b> и <b>set</b>. В том и другом случае он задаёт максимальное количество элементов, которое должно быть выбрано в списке или блоке.<br />
+	Параметр может быть опущен, в этом случае его значение не учитывается.</li>
+</ul>
+
+<h3>Примеры:</h3>
+
+Цветовая маркировка:<br /><br />
+<span class="ACCEPTABLE margined">Валидный блок</span><br />
+<span class="UNACCEPTABLE margined">Невалидный блок</span><br />
+<span class="REQUIRED margined">Обязательное заполнение</span><br />
+<span class="NOREQUIRED margined">Заполненное обязательное поле</span><br />
+<br />
+<fieldset class='sample'>
+Проверка валидности по регулярному выражению: поле будет валидно, только если в нём есть хотя бы одна цифра.
+<form id="sample1">
+	<input type="text" data-rule-valid='[{"key":"regexp","value":"\\d"}]' />
+	<script>$("#sample1").lemongrab();</script>
+</form>
+<span onclick="$('#code1').show()" class="pseudo">Показать код примера.</span><br/>
+<pre><code id="code1">
+&lt;form id=&quot;sample1&quot;&gt;
+	&lt;input type=&quot;text&quot; data-rule-valid=&apos;[{&quot;key&quot;:&quot;regexp&quot;,&quot;value&quot;:&quot;\\d&quot;}]&apos; /&gt;
+	&lt;script&gt;$(&quot;#sample1&quot;).lemongrab();&lt;/script&gt;
+&lt;/form&gt;
+</code></pre>
+<br />
+
+Связь поля с другим элементом: поле валидно, если чекбокс включён.
+<form id="sample2">
+	<input id="cb" type="checkbox"/>
+	<input type="text" data-rule-valid='[{"key":"c","selector":"#cb"}]' />
+	<script>$("#sample2").lemongrab();</script>
+</form>
+<span onclick="$('#code2').show()" class="pseudo">Показать код примера.</span><br/>
+<pre><code id="code2">
+&lt;form id=&quot;sample2&quot;&gt;
+	&lt;input id=&quot;cb&quot; type=&quot;checkbox&quot;/&gt;
+	&lt;input type=&quot;text&quot; data-rule-valid=&apos;[{&quot;key&quot;:&quot;c&quot;,&quot;selector&quot;:&quot;#cb&quot;}]&apos; /&gt;
+	&lt;script&gt;$(&quot;#sample2&quot;).lemongrab();&lt;/script&gt;
+&lt;/form&gt;
+</code></pre>
+<br />
+Использование инвертирования и нескольких правил одновременно: поле валидно, если чекбокс <b>не</b> включён, а в нём есть хотя бы одна цифра.
+<form id="sample3">
+	<input id="cb2" type="checkbox" checked="checked"/>
+	<input type="text" data-rule-valid='[{"key":"!c","selector":"#cb2"},{"key":"regexp","value":"\\d"}]' />
+	<script>$("#sample3").lemongrab();</script>
+</form>
+<span onclick="$('#code3').show()" class="pseudo">Показать код примера.</span><br/>
+<pre><code id="code3">
+&lt;form id=&quot;sample3&quot;&gt;
+	&lt;input id=&quot;cb2&quot; type=&quot;checkbox&quot; checked=&quot;checked&quot;/&gt;
+	&lt;input type=&quot;text&quot; data-rule-valid=&apos;[{&quot;key&quot;:&quot;!c&quot;,&quot;selector&quot;:&quot;#cb2&quot;},{&quot;key&quot;:&quot;regexp&quot;,&quot;value&quot;:&quot;\\d&quot;}]&apos; /&gt;
+	&lt;script&gt;$(&quot;#sample3&quot;).lemongrab();&lt;/script&gt;
+&lt;/form&gt;
+</code></pre>
+<br />
+
+Использование нативного кода: если чекбокс включён, поле валидно только если в нём есть цифра, иначе - только если в нём есть нецифровой символ.
+<form id="sample4">
+	<input id="cb4" type="checkbox"/>
+	<input type="text" id="tx4" data-rule-valid='[{"key":"native","value":"my_function()"}]' />
+	<script>function my_function(){
+		if ($("#cb4").is(":checked")) {
+			return (RegExp(/\d/).test($("#tx4").val()));
+		} else {
+			return (RegExp(/\D/).test($("#tx4").val()));
+		}
+	}
+	</script>
+	<script>$("#sample4").lemongrab();</script>
+</form>
+<span onclick="$('#code4').show()" class="pseudo">Показать код примера.</span><br/>
+<pre><code id="code4">
+&lt;form id=&quot;sample4&quot;&gt;
+	&lt;input id=&quot;cb4&quot; type=&quot;checkbox&quot;/&gt;
+	&lt;input type=&quot;text&quot; id=&quot;tx4&quot; data-rule-valid=&apos;[{&quot;key&quot;:&quot;native&quot;,&quot;value&quot;:&quot;my_function()&quot;}]&apos; /&gt;
+	&lt;script&gt;function my_function(){
+		if ($(&quot;#cb4&quot;).is(&quot;:checked&quot;)) {
+			return (RegExp(/\d/).test($(&quot;#tx4&quot;).val()));
+		} else {
+			return (RegExp(/\D/).test($(&quot;#tx4&quot;).val()));
+		}
+	}
+	&lt;/script&gt;
+	&lt;script&gt;$(&quot;#sample4&quot;).lemongrab();&lt;/script&gt;
+&lt;/form&gt;
+</code></pre>
+<br />
+
+Задание логики применения правил: поле будет валидно если чекбокс будет включён или если в нём есть цифры.
+<form id="sample6">
+	<input id="cb6" type="checkbox" checked="checked"/>
+	<input type="text" data-rule-valid='[{"key":"c","selector":"#cb6","logic":"or"},{"key":"regexp","value":"\\d","logic":"or"}]' />
+	<script>$("#sample6").lemongrab();</script>
+</form>
+<span onclick="$('#code6').show()" class="pseudo">Показать код примера.</span><br/>
+<pre><code id="code6">
+&lt;form id=&quot;sample6&quot;&gt;
+	&lt;input id=&quot;cb6&quot; type=&quot;checkbox&quot; checked=&quot;checked&quot;/&gt;
+	&lt;input type=&quot;text&quot; data-rule-valid=&apos;[{&quot;key&quot;:&quot;c&quot;,&quot;selector&quot;:&quot;#cb6&quot;,&quot;logic&quot;:&quot;or&quot;},{&quot;key&quot;:&quot;regexp&quot;,&quot;value&quot;:&quot;\\d&quot;,&quot;logic&quot;:&quot;or&quot;}]&apos; /&gt;
+	&lt;script&gt;$(&quot;#sample6&quot;).lemongrab();&lt;/script&gt;
+&lt;/form&gt;
+</code></pre>
+<br />
+
+Работа со списками: текстовое поле будет валидно, если в списке выбран элемент "Вариант 3".
+<form id="sample10">
+<select name="sel10[]" id="sel10">
+	<option value="val1" selected="selected">Вариант 1</option>
+	<option value="val2">Вариант 2</option>
+	<option value="val3">Вариант 3</option>
+	<option value="val4">Вариант 4</option>
+</select>
+<input type="text" name="tx10" value="Индикатор" data-rule-valid='[{"key":"s","selector":"#sel10","value":"val3"}]'/>
+<script>$("#sample10").lemongrab();</script>
+</form>
+<span onclick="$('#code10').show()" class="pseudo">Показать код примера.</span><br/>
+<pre><code id="code10">
+&lt;form id=&quot;sample10&quot;&gt;
+&lt;select name=&quot;sel10&quot; id=&quot;sel10&quot;&gt;
+	&lt;option value=&quot;val1&quot; selected=&quot;selected&quot;&gt;Вариант 1&lt;/option&gt;
+	&lt;option value=&quot;val2&quot;&gt;Вариант 2&lt;/option&gt;
+	&lt;option value=&quot;val3&quot;&gt;Вариант 3&lt;/option&gt;
+	&lt;option value=&quot;val4&quot;&gt;Вариант 4&lt;/option&gt;
+&lt;/select&gt;
+&lt;input type=&quot;text&quot; name=&quot;tx10&quot; value=&quot;Индикатор&quot; data-rule-valid=&apos;[{&quot;key&quot;:&quot;s&quot;,&quot;selector&quot;:&quot;#sel10&quot;,&quot;value&quot;:&quot;val3&quot;}]&apos;/&gt;
+&lt;script&gt;$(&quot;#sample10&quot;).lemongrab();&lt;/script&gt;
+&lt;/form&gt;
+</code></pre>
+<br />
+
+Работа с многовариантными списками: текстовое поле будет обязательно к заполнению только если в списке выбраны первый и третий варианты. Список будет валиден, если в нём выбрано не меньше двух и не больше четырёх элементов.
+<form id="sample11">
+<select name="sel11[]" id="sel11" multiple="multiple" data-rule-valid='[{"key":"s","min":2,"max":4}]'>
+	<option value="val1" selected="selected">Вариант 1</option>
+	<option value="val2">Вариант 2</option>
+	<option value="val3">Вариант 3</option>
+	<option value="val4">Вариант 4</option>
+	<option value="val5">Вариант 5</option>
+</select>
+<input type="text" name="tx11" value="Индикатор" data-rule-enabled='[{"key":"s","selector":"#sel11","value":"val3,val1"}]' data-rule-required='[{"key":"s","selector":"#sel11","value":"val3,val1"}]' />
+<script>$("#sample11").lemongrab();</script>
+</form>
+<span onclick="$('#code11').show()" class="pseudo">Показать код примера.</span><br/>
+<pre><code id="code11">
+&lt;form id=&quot;sample11&quot;&gt;
+&lt;select name=&quot;sel11[]&quot; id=&quot;sel11&quot; multiple=&quot;multiple&quot; data-rule-valid=&apos;[{&quot;key&quot;:&quot;s&quot;,&quot;min&quot;:2,&quot;max&quot;:4}]&apos;&gt;
+	&lt;option value=&quot;val1&quot; selected=&quot;selected&quot;&gt;Вариант 1&lt;/option&gt;
+	&lt;option value=&quot;val2&quot;&gt;Вариант 2&lt;/option&gt;
+	&lt;option value=&quot;val3&quot;&gt;Вариант 3&lt;/option&gt;
+	&lt;option value=&quot;val4&quot;&gt;Вариант 4&lt;/option&gt;
+	&lt;option value=&quot;val5&quot;&gt;Вариант 5&lt;/option&gt;
+&lt;/select&gt;
+&lt;input type=&quot;text&quot; name=&quot;tx11&quot; value=&quot;Индикатор&quot; data-rule-enabled=&apos;[{&quot;key&quot;:&quot;s&quot;,&quot;selector&quot;:&quot;#sel11&quot;,&quot;value&quot;:&quot;val3,val1&quot;}]&apos; data-rule-required=&apos;[{&quot;key&quot;:&quot;s&quot;,&quot;selector&quot;:&quot;#sel11&quot;,&quot;value&quot;:&quot;val3,val1&quot;}]&apos; /&gt;
+&lt;script&gt;$(&quot;#sample11&quot;).lemongrab();&lt;/script&gt;
+&lt;/form&gt;
+</code></pre>
+<br />
+
+Блок валиден, если в нём выбран хотя бы один чекбокс.
+<form id="sample12">
+<div id="div12" data-rule-valid='[{"key":"set","value":["input[type=checkbox]"]}]'>
+	<label><input type="checkbox" name="cb12_1"/>Checkbox 1</label><br />
+	<label><input type="checkbox" name="cb12_2"/>Checkbox 2</label><br />
+	<label><input type="radio" name="radio12_cb"/>Radio 1</label><br />
+	<label><input type="radio" name="radio12_cb"/>Radio 2</label><br />
+</select>
+</div>
+<script>$("#sample12").lemongrab();</script>
+</form>
+<span onclick="$('#code12').show()" class="pseudo">Показать код примера.</span><br/>
+<pre><code id="code12">
+&lt;form id=&quot;sample12&quot;&gt;
+&lt;div id=&quot;div12&quot; data-rule-valid=&apos;[{&quot;key&quot;:&quot;set&quot;,&quot;value&quot;:&quot;[\&quot;input[type=checkbox]\&quot;]&quot;}]&apos;&gt;
+	&lt;label&gt;&lt;input type=&quot;checkbox&quot; name=&quot;cb12_1&quot;/&gt;Checkbox 1&lt;/label&gt;&lt;br /&gt;
+	&lt;label&gt;&lt;input type=&quot;checkbox&quot; name=&quot;cb12_2&quot;/&gt;Checkbox 2&lt;/label&gt;&lt;br /&gt;
+	&lt;label&gt;&lt;input type=&quot;radio&quot; name=&quot;radio12_cb&quot;/&gt;Radio 1&lt;/label&gt;&lt;br /&gt;
+	&lt;label&gt;&lt;input type=&quot;radio&quot; name=&quot;radio12_cb&quot;/&gt;Radio 2&lt;/label&gt;&lt;br /&gt;
+&lt;/select&gt;
+&lt;/div&gt;
+&lt;script&gt;$(&quot;#sample12&quot;).lemongrab();&lt;/script&gt;
+&lt;/form&gt;
+</code></pre>
+<br />
+
+Блок валиден, если в нём выбраны все чекбоксы из группы #1. Поле ввода активно, если выбрано не меньше двух но не больше четырёх чекбоксов во второй группе.
+<form id="sample13">
+<div id="div13" data-rule-valid='[{"key":"set","value":["#group1 input[type=checkbox]"],"strict":true}]'>
+	<fieldset id="group1">
+		<legend>Группа 1</legend>
+		<label><input type="checkbox" name="cb13_1"/>Checkbox 1</label><br />
+		<label><input type="checkbox" name="cb13_2"/>Checkbox 2</label><br />
+		<label><input type="checkbox" name="cb13_3"/>Checkbox 3</label><br />
+		<label><input type="checkbox" name="cb13_4"/>Checkbox 4</label><br />
+	</fieldset>
+	<fieldset id="group2">
+		<legend>Группа 2</legend>
+		<label><input type="checkbox" name="cb13_5"/>Checkbox 5</label><br />
+		<label><input type="checkbox" name="cb13_6"/>Checkbox 6</label><br />
+		<label><input type="checkbox" name="cb13_7"/>Checkbox 7</label><br />
+		<label><input type="checkbox" name="cb13_8"/>Checkbox 8</label><br />
+		<label><input type="checkbox" name="cb13_9"/>Checkbox 9</label><br />
+	</fieldset>
+	<input type="text" name="tx13" data-rule-enabled='[{"key":"set","selector":"#div13","value":["#group2 input[type=checkbox]"],"min":2,"max":4}]' />
+</select>
+</div>
+<script>$("#sample13").lemongrab();</script>
+</form>
+<span onclick="$('#code13').show()" class="pseudo">Показать код примера.</span><br/>
+<pre><code id="code13">
+&lt;form id=&quot;sample13&quot;&gt;
+&lt;div id=&quot;div13&quot; data-rule-valid=&apos;[{&quot;key&quot;:&quot;set&quot;,&quot;value&quot;:[&quot;#group1 input[type=checkbox]&quot;],&quot;strict&quot;:true}]&apos;&gt;
+	&lt;fieldset id=&quot;group1&quot;&gt;
+		&lt;legend&gt;Группа 1&lt;/legend&gt;
+		&lt;label&gt;&lt;input type=&quot;checkbox&quot; name=&quot;cb13_1&quot;/&gt;Checkbox 1&lt;/label&gt;&lt;br /&gt;
+		&lt;label&gt;&lt;input type=&quot;checkbox&quot; name=&quot;cb13_2&quot;/&gt;Checkbox 2&lt;/label&gt;&lt;br /&gt;
+		&lt;label&gt;&lt;input type=&quot;checkbox&quot; name=&quot;cb13_3&quot;/&gt;Checkbox 3&lt;/label&gt;&lt;br /&gt;
+		&lt;label&gt;&lt;input type=&quot;checkbox&quot; name=&quot;cb13_4&quot;/&gt;Checkbox 4&lt;/label&gt;&lt;br /&gt;
+	&lt;/fieldset&gt;
+	&lt;fieldset id=&quot;group2&quot;&gt;
+		&lt;legend&gt;Группа 2&lt;/legend&gt;
+		&lt;label&gt;&lt;input type=&quot;checkbox&quot; name=&quot;cb13_5&quot;/&gt;Checkbox 5&lt;/label&gt;&lt;br /&gt;
+		&lt;label&gt;&lt;input type=&quot;checkbox&quot; name=&quot;cb13_6&quot;/&gt;Checkbox 6&lt;/label&gt;&lt;br /&gt;
+		&lt;label&gt;&lt;input type=&quot;checkbox&quot; name=&quot;cb13_7&quot;/&gt;Checkbox 7&lt;/label&gt;&lt;br /&gt;
+		&lt;label&gt;&lt;input type=&quot;checkbox&quot; name=&quot;cb13_8&quot;/&gt;Checkbox 8&lt;/label&gt;&lt;br /&gt;
+		&lt;label&gt;&lt;input type=&quot;checkbox&quot; name=&quot;cb13_9&quot;/&gt;Checkbox 9&lt;/label&gt;&lt;br /&gt;
+	&lt;/fieldset&gt;
+	&lt;input type=&quot;text&quot; name=&quot;tx13&quot; data-rule-enabled=&apos;[{&quot;key&quot;:&quot;set&quot;,&quot;selector&quot;:&quot;#div13&quot;,&quot;value&quot;:[&quot;#group2 input[type=checkbox]&quot;],&quot;min&quot;:2,&quot;max&quot;:4}]&apos; /&gt;
+&lt;/select&gt;
+&lt;/div&gt;
+&lt;script&gt;$(&quot;#sample13&quot;).lemongrab();&lt;/script&gt;
+&lt;/form&gt;
+</code></pre>
+<br />
+</fieldset><br />
+
+
+<h2>Использование атрибута data-rule-lemongrab</h2>
+Все вышеуказаные правила (<b>data-rule-valid</b>, <b>data-rule-required</b> и т.д.) можно объединить в одно правило <b>data-rule-lemongrab</b>. В этом случае параметры валидации задаются точно так же, как в предыдущем способе, за исключением того, что каждому набору параметров необходимо дополнительно указать, какому правилу они соответствуют, например:
+<br /><br />
+<fieldset>
+<form id="sample7">
+<input id="cb7" type="checkbox" checked="checked"/>
+<input type="text" data-rule-lemongrab='{"valid": [{"key":"regexp","value":"\\D"}],"required": [{"key":"c","selector":"#cb7"}]}' />
+</form>
+<script>$("#sample7").lemongrab();</script>
+<span onclick="$('#code7').show()" class="pseudo">Показать код примера.</span><br/>
+<pre><code id="code7">
+&lt;form id=&quot;sample7&quot;&gt;
+&lt;input id=&quot;cb7&quot; type=&quot;checkbox&quot; checked=&quot;checked&quot;/&gt;
+&lt;input type=&quot;text&quot; data-rule-lemongrab=&apos;{&quot;valid&quot;: [{&quot;key&quot;:&quot;regexp&quot;,&quot;value&quot;:&quot;\\D&quot;}],&quot;required&quot;: [{&quot;key&quot;:&quot;c&quot;,&quot;selector&quot;:&quot;#cb7&quot;}]}&apos; /&gt;
+&lt;/form&gt;
+&lt;script&gt;$(&quot;#sample7&quot;).lemongrab();&lt;/script&gt;
+</code></pre>
+<br />
+
+</fieldset><br />
+
+Атрибут <b>data-rule-lemongrab</b> может указываться совместно с другими data-параметрами. В этом случае применяются и работают все указанные правила в том порядке, в каком они заданы; это следует учитывать, если разные data-параметры задают противоположные по логике условия.
+
+<h2>Передача правил при вызове плагина</h2>
+
+Правила валидации можно указать непосредственно при его вызове, передав описывающий их JSON вторым параметром функции .lemongrab(). Правила и их параметры в этом случае задаются примерно тем же образом, что и раньше, но дополнительно должен указываться селектор для элементов, к которым эти правила должны применяться.
+<br /><br />
+<fieldset>
+<form id="sample8">
+<input id="cb8" type="checkbox" checked="checked"/>
+<input id="tx8" type="text" />
+<input class="checkme" type="text" />
+<input class="checkme" type="text" />
+
+</form>
+<script>
+var
+	rules=[
+	{
+		"selector":"#tx8",
+		"rule":{
+			"valid": [
+				{
+					"key":"regexp",
+					"value":"\\d"
+				},
+				{
+					"key":"c",
+					"selector":"#cb8",
+					"logic":"||"
+				}
+			],
+			"required":[
+				{
+					"key":"n",
+					"value":true
+				}
+			]
+		}
+	},{
+		"selector":".checkme",
+		"rule":
+				{
+				"enabled": [
+					{
+					"key":"checkbox",
+					"selector":"#cb8",
+					}
+				]
+			}
+		}
+	];
+$("#sample8").lemongrab('',rules);
+</script>
+<span onclick="$('#code8').show()" class="pseudo">Показать код примера.</span><br />
+<pre><code id="code8">
+&lt;form id=&quot;sample8&quot;&gt;
+&lt;input id=&quot;cb8&quot; type=&quot;checkbox&quot; checked=&quot;checked&quot;/&gt;
+&lt;input id=&quot;tx8&quot; type=&quot;text&quot; /&gt;
+&lt;input class=&quot;checkme&quot; type=&quot;text&quot; /&gt;
+&lt;input class=&quot;checkme&quot; type=&quot;text&quot; /&gt;
+
+&lt;/form&gt;
+&lt;script&gt;
+var
+	rules=[
+	{
+		&quot;selector&quot;:&quot;#tx8&quot;,
+		&quot;rule&quot;:{
+			&quot;valid&quot;: [
+				{
+					&quot;key&quot;:&quot;regexp&quot;,
+					&quot;value&quot;:&quot;\\d&quot;
+				},
+				{
+					&quot;key&quot;:&quot;c&quot;,
+					&quot;selector&quot;:&quot;#cb8&quot;,
+					&quot;logic&quot;:&quot;||&quot;
+				}
+			],
+			&quot;required&quot;:[
+				{
+					&quot;key&quot;:&quot;n&quot;,
+					&quot;value&quot;:true
+				}
+			]
+		}
+	},{
+		&quot;selector&quot;:&quot;.checkme&quot;,
+		&quot;rule&quot;:
+				{
+				&quot;enabled&quot;: [
+					{
+					&quot;key&quot;:&quot;checkbox&quot;,
+					&quot;selector&quot;:&quot;#cb8&quot;,
+					}
+				]
+			}
+		}
+	];
+$(&quot;#sample8&quot;).lemongrab(&apos;&apos;,rules);
+&lt;/script&gt;
+</code></pre>
+<br />
+
+</fieldset><br />
+
+Этот способ может быть удобен тем, что передаваемый JSON не требует экранирования кавычек (за исключением непосредственно вложенного в него JavaScript-кода).<br />
+Правила, переданные при вызове плагина будут работать совместно с правилами, определёнными в data-атрибутах, при этом правила из data-атрибутов будут выполняться после правил, переданных при вызове. Это следует учитывать, если эти правила имеют противоположные по логике условия выполнения.
+
+<h1>Настройки</h1>
+
+Поведение валидатора может быть настроено стандартным для jQuery-плагина способом: при вызове инициализирующей функции можно переопределить некоторые его параметры. Список параметров, их назначение и значение по умолчанию приводятся ниже:
+<br /><br />
+<table class="options">
+	<tr><th>Параметр</th><th>Значение по умолчанию</th><th>Назначение</th></tr>
+	<tr><td>subselector</td><td>*</td><td>Дополнительный селектор, позволяющий указать, какие именно поля должны быть провалидированы. Не попавшие в этот селектор поля не будут валидироваться при наличии в них data-атрибутов с правилами валидации, однако валидация будет происходить, если правила были переданы при инициализации плагина.</td></tr>
+	<tr><td>classValid</td><td>ACCEPTABLE</td><td>Класс, добавляемый ко всем валидным полям.</td></tr>
+	<tr><td>classInvalid</td><td>UNACCEPTABLE</td><td>Класс, добавляемый ко всем невалидным полям.</td></tr>
+	<tr><td>classRequired</td><td>REQUIRED</td><td>Класс, добавляемый ко всем обязательным незаполненным полям.</td></tr>
+	<tr><td>classNorequired</td><td>NOREQUIRED</td><td>Класс, добавляемый ко всем обязательным заполненным полям.</td></tr>
+	<tr><td>classEnabled</td><td>ENABLED</td><td>Класс, добавляемый ко всем доступным для изменения полям (если доступность переключается в соответствии с правилом валидации).</td></tr>
+	<tr><td>classDisabled</td><td>DISABLED</td><td>Класс, добавляемый ко всем недоступным для изменения полям (если доступность переключается в соответствии с правилом валидации).</td></tr>
+	<tr><td>classVisible</td><td>VISIBLE</td><td>Класс, добавляемый ко всем видимым полям (если видимость переключается в соответствии с правилом валидации).</td></tr>
+	<tr><td>classHidden</td><td>HIDDEN</td><td>Класс, добавляемый ко всем невидимым полям (если видимость переключается в соответствии с правилом валидации).</td></tr>
+	<tr><td>action</td><td>input</td><td>Событие валидируемого поля, по которому происходит валидация. По умолчанию используется HTML5-событие <b>input</b>. Валидацию можно переназначить на любое другое стандартное событие (например click или change), либо событие, генерируемое jQuery-плагином.<br /><b>Важно:</b> если правило валидации устанавливает зависимость с checkable-элементом (чекбоксом, радиокнопкой или списком), на них <b>всегда</b> вешается дополнительная проверка по событию change.</td></tr>
+	<tr><td>allowInvalidSubmit</td><td>true</td><td>Разрешает или запрещает валидатору отправку невалидной формы<br />По умолчанию плагин будет блокировать отправку формы только если в ней есть незаполенные обязательные поля, с помощью этой опции такое же поведение можно включить и для невалидных полей.</td></tr>
+	<tr><td>useRequiredAttr</td><td>true</td><td>Добавлять ли обязательным полям HTML5-атрибут required. При наличии этого атрибута многие браузеры будут самостоятельно проверять заполненность обязательных полей, добавляя к ним собственные подсказки.</td></tr>
+	<tr><td>nativeEnabled</td><td>true</td><td>При включенной опции плагин будет самостоятельно переключать значение атрибута disabled, иначе - к полю будут просто применяться стили, указанные в classEnabled/classDisabled.</td></tr>
+	<tr><td>nativeVisible</td><td>true</td><td>При включенной опции плагин будет самостоятельно переключать значение CSS-свойства visible, иначе - к полю будут просто применяться стили, указанные в classVisible/classHidden.</td></tr>
+	<tr><td>autograb</td><td>true</td><td>При включённой опции плагин применит валидацию при инициализации (сразу при вызове .lemongrab()). В противном случае валидация всех полей произойдёт при первом срабатывании события action на любом из валидируемых полей.</td></tr>
+</table>
+<br />
+Опции, сериализованные в JSON, должны быть переданы первым параметром функции .lemongrab();
+
+<h2>Пример:</h2>
+
+<fieldset>
+<form id="sample5">
+	<input id="cb5" type="checkbox"/>
+	<label>Email: <input type="text" class='validate_me' data-rule-required='[{"key":"checkbox","selector":"#cb5"}]' data-rule-valid='[{"key":"r","value":"[a-zA-Z0-9-.]{1,}@([a-zA-Z\\.])?[a-zA-Z]{1,}\\.[a-zA-Z]{1,4}"}]' /></label><br />
+	<input type="text" name="test" value="Не валидируется" data-rule-required='[{"key":"checkbox","selector":"#cb5"}]'/>
+	<script>$("#sample5").lemongrab({"autograb":false,"useRequiredAttr":false,"subselector":".validate_me"});</script>
+</form>
+<span onclick="$('#code5').show()" class="pseudo">Показать код примера.</span><br/>
+<pre><code id="code5">
+&lt;form id=&quot;sample5&quot;&gt;
+	&lt;input id=&quot;cb5&quot; type=&quot;checkbox&quot;/&gt;
+	&lt;label&gt;Email: &lt;input type=&quot;text&quot; class=&apos;validate_me&apos; data-rule-required=&apos;[{&quot;key&quot;:&quot;checkbox&quot;,&quot;selector&quot;:&quot;#cb5&quot;}]&apos; data-rule-valid=&apos;[{&quot;key&quot;:&quot;r&quot;,&quot;value&quot;:&quot;[a-zA-Z0-9-.]{1,}@([a-zA-Z\\.])?[a-zA-Z]{1,}\\.[a-zA-Z]{1,4}&quot;}]&apos; /&gt;&lt;/label&gt;&lt;br /&gt;
+	&lt;input type=&quot;text&quot; name=&quot;test&quot; value=&quot;Не валидируется&quot; data-rule-required=&apos;[{&quot;key&quot;:&quot;checkbox&quot;,&quot;selector&quot;:&quot;#cb5&quot;}]&apos;/&gt;
+	&lt;script&gt;$(&quot;#sample5&quot;).lemongrab({&quot;autograb&quot;:false,&quot;useRequiredAttr&quot;:false,&quot;subselector&quot;:&quot;.validate_me&quot;});&lt;/script&gt;
+&lt;/form&gt;
+</code></pre>
+<br />
+</fieldset>
+
+<h1>События плагина</h1>
+Плагин добавляет собственные события <b>lemongrab.valid</b>, <b>lemongrab.novalid</b>, <b>lemongrab.require</b>, <b>lemongrab.norequire</b>, <b>lemongrab.visible</b>, <b>lemongrab.hide</b> для блока, к которому он применён. Эти события позволяют отслеживать изменение состояния блока, вызываясь каждый раз, когда:
+<ul>
+	<li><b>lemongrab.valid</b> - внутри блока не остаётся ни одного невалидного элемента (при условии, что такие элементы были).</li>
+	<li><b>lemongrab.novalid</b> - внутри блока появляется невалидный элемент (при условии, что до того все элементы были валидны).</li>
+	<li><b>lemongrab.require</b> - внутри блока появляется обязательный элемент (при условии, что до того все элементы были необязательны).</li>
+	<li><b>lemongrab.norequire</b> - когда внутри блока не остаётся ни одного обязательного для заполнения блока (при условии, что такие элементы были).</li>
+	<li><b>lemongrab.visible</b> - когда блок становится видим (при условии, что он был скрыт). Событие происходит только при изменении состояния плагином, при изменениии видимости извне событие не случится.</li>
+	<li><b>lemongrab.hide</b> - когда блок становится скрыт (при условии, что он был видим). Событие происходит только при изменении состояния плагином, при изменениии видимости извне событие не случится.</li>
+</ul>
+<br>
+Плагин предоставляет возможность в любой момент узнать состояние блока через функции <b>isValid()</b> (возвращает true, если внутри блока нет ни одного невалидного элемента) и <b>isNotRequired()</b> (возвращает true, если внутри блока нет ни одного обязательного для заполнения элемента).
+
+<h2>Пример:</h2>
+
+В данном примере представлена простая форма, позволяющая указать имя, способ и данные для обратной связи. Имя является обязательным для заполнения, и оно должно состоять минимум из трёх кириллических символов (регулярное выражение этого и других правил можно посмотреть в <a href="#code9n">коде примера</a>). Данные обратной связи не являются обязательными, однако если пользователь захочет их указать, то они будут проверяться на соответствие той или иной маске, в зависимости от выбранного способа связи.<br />
+Каждый раз, когда форма меняет своё состояние валидности или обязательности, срабатывает соответствующее событие. Проверить текущее состояние можно нажав кнопку "Проверить состояние".
+<br /><br />
+<fieldset>
+<form id="sample9">
+<label>Меня зовут: <input type="text" id="name" data-rule-required='[{"key":"!regexp","value":"^[а-яА-Я -]{3,}$"}]'/></label>
+<input type="button" style="float:right" value="Проверить состояние" onclick="check_state()"/>
+<br />
+
+<label><input type="checkbox" id="messaging" />Связаться со мной можно:</label>
+<fieldset data-rule-enabled='[{"selector":"#messaging","key":"c"}]'>
+<label><input type="radio" name="type" id="phone" checked="checked" onclick="$('#dlabel').text('Телефонный номер: ')">по телефону</label>
+<label><input type="radio" name="type" id="email" onclick="$('#dlabel').text('Почтовый адрес: ')">по почте</label><br />
+<label for="data" id="dlabel">Телефонный номер: </label><input type="text" id="data" name="callback" data-rule-valid='[{"key":"c","selector":"#phone"},{"key":"r","value":"\\d{1,10}"},{"key":"c","selector":"#email","logic":"or"},{"key":"r","value":"[a-zA-Z0-9-.]{1,}@([a-zA-Z\\.])?[a-zA-Z]{1,}\\.[a-zA-Z]{1,4}"},{"key":"c","selector":"#messaging","logic":"or"}]'/>
+</fieldset>
+<textarea id='console'></textarea>
+<input type="submit" />
+</form>
+<script>
+	$("#sample9").lemongrab();
+	$("#sample9").on("lemongrab.valid",function(){
+		$("#console").val($("#console").val()+"\n"+"Форма валидна");
+	});
+	$("#sample9").on("lemongrab.novalid",function(){
+		$("#console").val($("#console").val()+"\n"+"Форма не валидна");
+	});
+	$("#sample9").on("lemongrab.require",function(){
+		$("#console").val($("#console").val()+"\n"+"Есть незаполенные обязательные поля");
+	});
+	$("#sample9").on("lemongrab.norequire",function(){
+		$("#console").val($("#console").val()+"\n"+"Все обязательные поля заполнены");
+	});
+	
+	function check_state(){
+		if ($("#sample9").isValid()) {
+			$("#console").val($("#console").val()+"\n"+"Форма валидна");
+		} else {
+			$("#console").val($("#console").val()+"\n"+"Форма не валидна");
+		}
+		if ($("#sample9").isNotRequired()) {
+			$("#console").val($("#console").val()+"\n"+"Все обязательные поля заполнены");
+		} else {
+			$("#console").val($("#console").val()+"\n"+"Есть незаполенные обязательные поля");
+		}
+	}
+</script>
+<a name="code9n" onclick="$('#code9').show()" class="pseudo">Показать код примера.</a><br/>
+<pre><code id="code9">
+&lt;form id=&quot;sample9&quot;&gt;
+&lt;label&gt;Меня зовут: &lt;input type=&quot;text&quot; id=&quot;name&quot; data-rule-required=&apos;[{&quot;key&quot;:&quot;!regexp&quot;,&quot;value&quot;:&quot;^[а-яА-Я -]{3,}$&quot;}]&apos;/&gt;&lt;/label&gt;
+&lt;input type=&quot;button&quot; style=&quot;float:right&quot; value=&quot;Проверить состояние&quot; onclick=&quot;check_state()&quot;/&gt;
+&lt;br /&gt;
+
+&lt;label&gt;&lt;input type=&quot;checkbox&quot; id=&quot;messaging&quot; /&gt;Связаться со мной можно:&lt;/label&gt;
+&lt;fieldset data-rule-enabled=&apos;[{&quot;selector&quot;:&quot;#messaging&quot;,&quot;key&quot;:&quot;c&quot;}]&apos;&gt;
+&lt;label&gt;&lt;input type=&quot;radio&quot; name=&quot;type&quot; id=&quot;phone&quot; checked=&quot;checked&quot; onclick=&quot;$(&apos;#dlabel&apos;).text(&apos;Телефонный номер: &apos;)&quot;&gt;по телефону&lt;/label&gt;
+&lt;label&gt;&lt;input type=&quot;radio&quot; name=&quot;type&quot; id=&quot;email&quot; onclick=&quot;$(&apos;#dlabel&apos;).text(&apos;Почтовый адрес: &apos;)&quot;&gt;по почте&lt;/label&gt;&lt;br /&gt;
+&lt;label for=&quot;data&quot; id=&quot;dlabel&quot;&gt;Телефонный номер: &lt;/label&gt;&lt;input type=&quot;text&quot; id=&quot;data&quot; name=&quot;callback&quot; data-rule-valid=&apos;[{&quot;key&quot;:&quot;c&quot;,&quot;selector&quot;:&quot;#phone&quot;},{&quot;key&quot;:&quot;r&quot;,&quot;value&quot;:&quot;\\d{1,10}&quot;},{&quot;key&quot;:&quot;c&quot;,&quot;selector&quot;:&quot;#email&quot;,&quot;logic&quot;:&quot;or&quot;},{&quot;key&quot;:&quot;r&quot;,&quot;value&quot;:&quot;[a-zA-Z0-9-.]{1,}@([a-zA-Z\\.])?[a-zA-Z]{1,}\\.[a-zA-Z]{1,4}&quot;},{&quot;key&quot;:&quot;c&quot;,&quot;selector&quot;:&quot;#messaging&quot;,&quot;logic&quot;:&quot;or&quot;}]&apos;/&gt;
+&lt;/fieldset&gt;
+&lt;textarea id=&apos;console&apos;&gt;&lt;/textarea&gt;
+&lt;input type=&quot;submit&quot; /&gt;
+&lt;/form&gt;
+&lt;script&gt;
+	$(&quot;#sample9&quot;).lemongrab();
+	$(&quot;#sample9&quot;).on(&quot;lemongrab.valid&quot;,function(){
+		$(&quot;#console&quot;).val($(&quot;#console&quot;).val()+&quot;\n&quot;+&quot;Форма валидна&quot;);
+	});
+	$(&quot;#sample9&quot;).on(&quot;lemongrab.novalid&quot;,function(){
+		$(&quot;#console&quot;).val($(&quot;#console&quot;).val()+&quot;\n&quot;+&quot;Форма не валидна&quot;);
+	});
+	$(&quot;#sample9&quot;).on(&quot;lemongrab.require&quot;,function(){
+		$(&quot;#console&quot;).val($(&quot;#console&quot;).val()+&quot;\n&quot;+&quot;Есть незаполенные обязательные поля&quot;);
+	});
+	$(&quot;#sample9&quot;).on(&quot;lemongrab.norequire&quot;,function(){
+		$(&quot;#console&quot;).val($(&quot;#console&quot;).val()+&quot;\n&quot;+&quot;Все обязательные поля заполнены&quot;);
+	});
+	
+	function check_state(){
+		if ($(&quot;#sample9&quot;).isValid()) {
+			$(&quot;#console&quot;).val($(&quot;#console&quot;).val()+&quot;\n&quot;+&quot;Форма валидна&quot;);
+		} else {
+			$(&quot;#console&quot;).val($(&quot;#console&quot;).val()+&quot;\n&quot;+&quot;Форма не валидна&quot;);
+		}
+		if ($(&quot;#sample9&quot;).isNotRequired()) {
+			$(&quot;#console&quot;).val($(&quot;#console&quot;).val()+&quot;\n&quot;+&quot;Все обязательные поля заполнены&quot;);
+		} else {
+			$(&quot;#console&quot;).val($(&quot;#console&quot;).val()+&quot;\n&quot;+&quot;Есть незаполенные обязательные поля&quot;);
+		}
+	}
+&lt;/script&gt;
+</code></pre>
+</fieldset><br />
+
+<h1>Почему lemongrab?</h1>
+
+Потому что
+<div class="title"><img src='lemongrab.png' title="НЕПРИЕМЛИМО!!!"/></div>
+
+</body>
+</html>

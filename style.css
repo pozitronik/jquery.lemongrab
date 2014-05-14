@@ -1,0 +1,74 @@
+
+body {
+	font-family: Arial;
+}
+
+input, textarea {
+	outline: none;
+}
+
+textarea {
+	resize: none;
+}
+
+
+fieldset{
+	border:1px solid black;
+}
+
+.margined {
+	margin: 5px;
+	display: inline-block;
+}
+
+
+fieldset code {
+	display: none;
+}
+
+.pseudo {
+	display:inline-block;
+	padding-top:5px;
+	border-bottom: 1px dashed black;
+	cursor:pointer;
+	text-decoration: none;
+}
+
+.title{
+	text-align:center;
+}
+
+#console{
+	border:0px;
+	width:100%;
+	height:100px;
+}
+
+table.options{
+	border-spacing: 0px;
+	border-collapse: collapse;
+	border:1px solid black;
+	width:100%;
+}
+
+table.options td, table.options th{
+	border:1px solid black;
+	padding:3px;
+}
+
+.ACCEPTABLE{
+	border: 2px solid green;
+	
+}
+
+.UNACCEPTABLE{
+	border: 2px solid red;
+}
+
+.REQUIRED{
+	background:#FFAAAA;
+}
+
+.NOREQUIRED{
+	background:#AAAAFF;
+}
