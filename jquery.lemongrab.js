@@ -1,4 +1,4 @@
-﻿/*! Lemongrab v 07.04.14 | (c) 2013-2014 Pavel Dubrovsky */
+﻿/*! Lemongrab v 07.04.14 | (c) 2013-2014 Pavel Dubrovsky*/
 
 (function( $ ) {
 	var
@@ -36,21 +36,16 @@
 			for (selector_count=0;selector_count<RULES.length;selector_count++){//Разбиваем переданный параметр на селекторы
 				for_selector=RULES[selector_count].selector;
 				//Перебираем все условия валидации
-				if (conditions=RULES[selector_count].rule.valid) {
-					rule="VALID";
-				} else if (conditions=RULES[selector_count].rule.required) {
-					rule="REQUIRED";
-				} else if (conditions=RULES[selector_count].rule.enabled) {
-					rule="ENABLED";
-				} else if (conditions=RULES[selector_count].rule.visible) {
-					rule="VISIBLE";
+				for (e_rule in RULES[selector_count].rule) {
+					rule=e_rule.toUpperCase();
+					conditions=RULES[selector_count].rule[e_rule];
+					//В conditions-набор условий правила. В rule-само правило.
+					rule_options={};
+					for (conditions_count=0;conditions_count<conditions.length;conditions_count++){//Пройдёмся по условиям, дополнив умолчания. Можно использовать существующий объект
+						rule_options[conditions_count]=complete_condition(conditions[conditions_count]);
+					}
+					apply_rule($(for_selector),rule,rule_options);
 				}
-				//В conditions-набор условий правила. В rule-само правило.
-				rule_options={};
-				for (conditions_count=0;conditions_count<conditions.length;conditions_count++){//Пройдёмся по условиям, дополнив умолчания. Можно использовать существующий объект
-					rule_options[conditions_count]=complete_condition(conditions[conditions_count]);
-				}
-				apply_rule($(for_selector),rule,rule_options);
 			}
 		}
 		
