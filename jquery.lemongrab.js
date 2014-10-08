@@ -1,4 +1,4 @@
-﻿/*! Lemongrab v 07.04.14 | (c) 2013-2014 Pavel Dubrovsky*/
+﻿/*! Lemongrab v 08.10.14 | (c) 2013-2014 Pavel Dubrovsky*/
 
 (function( $ ) {
 	var
@@ -361,7 +361,7 @@
 					action= "change";
 				break;
 				case 2://С радиокнопками всё плохо, у них нет нормального onChange
-					if (h.attr('name')!=='undefined') h=$("input[name="+h.attr('name')+"]");
+					if (h.attr('name')!=='undefined') h=$('input[name="'+h.attr('name')+'\"]');
 					action= "change";
 				break;
 				case 3://Для селектов нужно обрабатывать оба события
