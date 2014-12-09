@@ -384,10 +384,8 @@
 				}
 				if (ACCEPTABLE.onAction) ACCEPTABLE.onAction(field);
 				initiateEvents(FORM);
-				if (ACCEPTABLE.classUnchanged!==false){
-					h.removeClass(ACCEPTABLE.classUnchanged);
-					if (ACCEPTABLE.classChanged!==false) h.addClass(ACCEPTABLE.classChanged);
-				}
+				if (ACCEPTABLE.classUnchanged!==false)h.removeClass(ACCEPTABLE.classUnchanged);
+				if (ACCEPTABLE.classChanged!==false) h.addClass(ACCEPTABLE.classChanged);
 			});
 			
 			if (ACCEPTABLE.classUnchanged!==false) h.addClass(ACCEPTABLE.classUnchanged);
