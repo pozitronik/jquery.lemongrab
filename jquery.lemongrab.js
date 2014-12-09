@@ -20,11 +20,13 @@
 													"classVisible":"VISIBLE",
 													"classHidden":"HIDDEN",
 													"action":"input",
+													"onAction":false,
 													"allowInvalidSubmit":true,
 													"useRequiredAttr":true,
 													"nativeEnabled":true,
 													"nativeVisible":true,
 													"autograb":true
+													
 												},options);
 		FORM=this;
 		
@@ -374,6 +376,7 @@
 				if (x) {
 					h.trigger(x.action+x.rule);
 				}
+				if (ACCEPTABLE.onAction) ACCEPTABLE.onAction(field);
 				initiateEvents(FORM);
 				
 			});
