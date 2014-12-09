@@ -389,13 +389,16 @@
 					if (ACCEPTABLE.classChanged!==false) h.addClass(ACCEPTABLE.classChanged);
 				}
 			});
+			
+			if (ACCEPTABLE.classUnchanged!==false) h.addClass(ACCEPTABLE.classUnchanged);
+			
 			if (ACCEPTABLE.autograb) {
 				var a=action.split(' ');
 				$(a).each (function(val){
 					h.trigger(a[val]);//Инициализация состояния
 				});
 			}
-			if (ACCEPTABLE.classUnchanged!==false) h.addClass(ACCEPTABLE.classUnchanged);
+			
 		}
 	}
 	
