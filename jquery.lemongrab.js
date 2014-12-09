@@ -22,6 +22,7 @@
 													"classChanged":"CHANGED",
 													"classUnchanged":"UNCHANGED",
 													"action":"input",
+													"actions":{},
 													"onAction":false,
 													"allowInvalidSubmit":true,
 													"useRequiredAttr":true,
@@ -359,23 +360,27 @@
 		summary_conditions.condition=summary_conditions.condition.substr(4);
 		for (i=0;i<summary_conditions.handler.length;i++){
 			h=(summary_conditions.handler[i]==='')?field:eval(summary_conditions.handler[i]);//На всякий случай
-			switch (checkable(h)){
+			
+			action=get_rule_action(rule,conditions.actions);//Получим событие, заданное в правиле непосредственно 
+			action+=" "+get_rule_action(rule,ACCEPTABLE.actions);//Получим событие, заданное для всех правил
+			
+			switch (checkable(h)){//Получим глобальное правило + правила для "особенных" элементов
 				case 0:
-					action= ACCEPTABLE.action;
+					action+=" "+ ACCEPTABLE.action;
 				break;
 				case 1:
 					action= "change";
 				break;
 				case 2://С радиокнопками всё плохо, у них нет нормального onChange
 					if (h.attr('name')!=='undefined') h=$('input[name="'+h.attr('name')+'\"]');
-					action= "change";
+					action+=" "+ "change";
 				break;
 				case 3://Для селектов нужно обрабатывать оба события
-					action= ACCEPTABLE.action+" change";
+					action+=" "+ ACCEPTABLE.action+" change";
 				break;
 			}
 			
-			action=get_rule_action(rule,conditions.actions)||action;
+			
 			
 			h.on(action,function(){
 				var x=set_class(field,rule,eval(summary_conditions.condition));
@@ -401,8 +406,8 @@
 	}
 	
 	function get_rule_action(rule,actions) {
-		if (typeof(actions)==='undefined') return false;
-		return(actions[rule.toLowerCase()]||false);
+		if (typeof(actions)==='undefined') return "";
+		return(actions[rule.toLowerCase()]||"");
 	}
 	
 	//Возвращает true, если переданный элемент поддерживает только onChange
