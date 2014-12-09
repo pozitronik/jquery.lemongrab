@@ -46,6 +46,7 @@
 					for (conditions_count=0;conditions_count<conditions.length;conditions_count++){//Пройдёмся по условиям, дополнив умолчания. Можно использовать существующий объект
 						rule_options[conditions_count]=complete_condition(conditions[conditions_count]);
 					}
+					rule_options.actions=RULES[selector_count].actions;
 					apply_rule($(for_selector),rule,rule_options);
 				}
 			}
@@ -103,6 +104,7 @@
 				for (conditions_count=0;conditions_count<conditions.length;conditions_count++){//Пройдёмся по условиям, дополнив умолчания. Можно использовать существующий объект
 					rule_options[conditions_count]=complete_condition(conditions[conditions_count]);
 				}
+				//rule_options.actions=RULES[selector_count].actions;
 				apply_rule(lemon,rule,rule_options);
 			}
 		});
@@ -345,7 +347,7 @@
 		},
 		js_condition,i,h,condition, action;
 		for (condition in conditions){
-			js_condition=get_js_condition(conditions[condition],field);
+			if ($.isNumeric(condition)) js_condition=get_js_condition(conditions[condition],field);//В conditions может быть нецифровой параметр, дополняющий набор правил
 			summary_conditions.condition+=" "+js_condition.condition;
 			for (i=0;i<js_condition.handler.length;i++){//Избавляемся от навешиваний одинаковых обработчиков на одно поле
 				if (!summary_conditions.handler.object_in_array(js_condition.handler[i])) summary_conditions.handler.push(js_condition.handler[i]);
@@ -371,6 +373,8 @@
 				break;
 			}
 			
+			action=get_rule_action(rule,conditions.actions)||action;
+			
 			h.on(action,function(){
 				var x=set_class(field,rule,eval(summary_conditions.condition));
 				if (x) {
@@ -388,6 +392,11 @@
 			}
 			
 		}
+	}
+	
+	function get_rule_action(rule,actions) {
+		if (typeof(actions)==='undefined') return false;
+		return(actions[rule.toLowerCase()]||false);
 	}
 	
 	//Возвращает true, если переданный элемент поддерживает только onChange
