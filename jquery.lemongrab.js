@@ -1,4 +1,4 @@
-﻿/*! Lemongrab v 08.10.14 | (c) 2013-2014 Pavel Dubrovsky*/
+﻿/*! Lemongrab v 11.12.14 | (c) 2013-2014 Pavel Dubrovsky*/
 
 (function( $ ) {
 	var
@@ -380,7 +380,7 @@
 				break;
 			}
 			
-			
+			action=action.trim();
 			
 			h.on(action,function(){
 				var x=set_class(field,rule,eval(summary_conditions.condition));
