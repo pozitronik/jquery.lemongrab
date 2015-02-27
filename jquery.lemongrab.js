@@ -1,4 +1,4 @@
-﻿/*! Lemongrab v 11.12.14 | (c) 2013-2014 Pavel Dubrovsky*/
+﻿/*! Lemongrab v 27.02.15 | (c) 2013-2015 Pavel Dubrovsky*/
 
 (function( $ ) {
 	var
@@ -28,7 +28,8 @@
 													"useRequiredAttr":true,
 													"nativeEnabled":true,
 													"nativeVisible":true,
-													"autograb":true
+													"autograb":true,
+													"ignore_autograb_change":true//Игнорировать смену состояний Changed/Unchanged при autograb=true
 													
 												},options);
 		FORM=this;
@@ -382,15 +383,18 @@
 			
 			action=action.trim();
 			
-			h.on(action,function(){
+			h.on(action,function(event,ignore_change){
 				var x=set_class(field,rule,eval(summary_conditions.condition));
 				if (x) {
 					h.trigger(x.action+x.rule);
 				}
 				if (ACCEPTABLE.onAction) ACCEPTABLE.onAction(field);
 				initiateEvents(FORM);
-				if (ACCEPTABLE.classUnchanged!==false)h.removeClass(ACCEPTABLE.classUnchanged);
-				if (ACCEPTABLE.classChanged!==false) h.addClass(ACCEPTABLE.classChanged);
+				
+				if (!ignore_change || typeof(ignore_change)==='undefined') {//вызываем изменение состояний changed/unchanged только для реально произошедших событий, а не для вызванных в коде
+					if (ACCEPTABLE.classUnchanged!==false)h.removeClass(ACCEPTABLE.classUnchanged);
+					if (ACCEPTABLE.classChanged!==false) h.addClass(ACCEPTABLE.classChanged);
+				}
 			});
 			
 			if (ACCEPTABLE.classUnchanged!==false) h.addClass(ACCEPTABLE.classUnchanged);
@@ -398,10 +402,9 @@
 			if (ACCEPTABLE.autograb) {
 				var a=action.split(' ');
 				$(a).each (function(val){
-					h.trigger(a[val]);//Инициализация состояния
+					h.trigger(a[val],[ACCEPTABLE.ignore_autograb_change]);//Инициализация состояния
 				});
 			}
-			
 		}
 	}
 	
