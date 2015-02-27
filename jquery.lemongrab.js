@@ -29,8 +29,8 @@
 													"nativeEnabled":true,
 													"nativeVisible":true,
 													"autograb":true,
-													"ignore_autograb_change":true//Игнорировать смену состояний Changed/Unchanged при autograb=true
-													
+													"ignore_autograb_change":true,//Игнорировать смену состояний Changed/Unchanged при autograb=true
+													"ignore_autograb_action":false//Игнорировать вызов события onAction при autograb=true
 												},options);
 		FORM=this;
 		
@@ -383,12 +383,15 @@
 			
 			action=action.trim();
 			
-			h.on(action,function(event,ignore_change){
+			h.on(action,function(event,ignore_change,ignore_action){
 				var x=set_class(field,rule,eval(summary_conditions.condition));
 				if (x) {
 					h.trigger(x.action+x.rule);
 				}
-				if (ACCEPTABLE.onAction) ACCEPTABLE.onAction(field);
+				
+				if (!ignore_action || typeof(ignore_action)==='undefined') {//вызываем срабатывании функции в onAction только для реально произошедших событий, а не для вызванных в коде
+					if (ACCEPTABLE.onAction) ACCEPTABLE.onAction(field);
+				}
 				initiateEvents(FORM);
 				
 				if (!ignore_change || typeof(ignore_change)==='undefined') {//вызываем изменение состояний changed/unchanged только для реально произошедших событий, а не для вызванных в коде
@@ -402,7 +405,7 @@
 			if (ACCEPTABLE.autograb) {
 				var a=action.split(' ');
 				$(a).each (function(val){
-					h.trigger(a[val],[ACCEPTABLE.ignore_autograb_change]);//Инициализация состояния
+					h.trigger(a[val],[ACCEPTABLE.ignore_autograb_change,ACCEPTABLE.ignore_autograb_action]);//Инициализация состояния
 				});
 			}
 		}
