@@ -1,4 +1,4 @@
-﻿/*! Lemongrab v 27.02.15 | (c) 2013-2015 Pavel Dubrovsky*/
+﻿/*! Lemongrab v 11.03.15 | (c) 2013-2015 Pavel Dubrovsky*/
 
 (function( $ ) {
 	var
@@ -61,6 +61,7 @@
 			lemon=$(this);
 			rules=lemon.data();//Получили список data-атрибутов
 			for (var rule_ in rules) {
+				if (['ruleValid','ruleRequired','ruleEnabled','ruleVisible','ruleLemongrab'].indexOf(rule_)===-1) continue;
 				conditions=rules[rule_];
 				switch (rule_){
 					case 'ruleValid':
