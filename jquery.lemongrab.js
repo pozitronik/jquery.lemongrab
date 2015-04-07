@@ -374,7 +374,7 @@
 					action= "change";
 				break;
 				case 2://С радиокнопками всё плохо, у них нет нормального onChange
-					if (h.attr('name')!=='undefined') h=$('input[name="'+h.attr('name')+'\"]');
+					if (typeof(h.attr('name'))!=='undefined') h=$('input[name="'+h.attr('name')+'\"]');
 					action+=" "+ "change";
 				break;
 				case 3://Для селектов нужно обрабатывать оба события
