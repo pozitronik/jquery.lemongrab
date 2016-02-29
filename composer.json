@@ -1,0 +1,16 @@
+{
+		"name": "pozitronik/jquery.lemongrab",
+		"description": "jQuery web-form validation plugin",
+		"type": "library",
+		"license": [
+				"GPL-3.0",
+		],
+		"homepage": "http://pozitronik.me/lemongrab",
+		"authors": [
+				{
+						"name": "Pavel Dubrovsky",
+						"homepage": "http://pozitronik.me",
+						"role": "Developer"
+				},
+		]
+}
